@@ -18,6 +18,7 @@ const ChatIdPage = async ({
   if(!userId) {
     // <RedirectToSignIn />
     return auth().redirectToSignIn();
+    // router.push('/sign-in');
   }
 
   const character = await prismadb.character.findUnique({
