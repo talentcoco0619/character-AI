@@ -45,7 +45,7 @@ model Character {
 }
 
 enum Role {
-  userId
+  user
   system
 }
 

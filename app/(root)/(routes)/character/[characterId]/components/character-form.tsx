@@ -114,7 +114,7 @@ export const CharacterForm = ({
     } catch (error) {
       toast({
         variant: "destructive",
-        description: "Seomthing went wrong",
+        description: "Something went wrong",
       })
     }
   };
