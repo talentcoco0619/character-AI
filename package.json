@@ -11,6 +11,7 @@
   "dependencies": {
     "@clerk/nextjs": "^5.6.1",
     "@hookform/resolvers": "^3.9.0",
+    "@langchain/pinecone": "^0.1.1",
     "@pinecone-database/pinecone": "^3.0.3",
     "@prisma/client": "^5.20.0",
     "@radix-ui/react-avatar": "^1.1.1",
