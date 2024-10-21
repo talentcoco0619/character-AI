@@ -30,7 +30,6 @@ export async function POST(
         const character = await prismadb.character.update({
             where: {
                 id: params.chatId,
-                userId: user.id,
             },
             data: {
                 messages: {
@@ -82,8 +81,63 @@ export async function POST(
         const { handlers } = LangChainStream();
 
         const model = new Replicate({
-            model: 
-        })
+            model: "tomasmcm/carl-llama-2-13b:7c3d624a8eca7ba9f4a1b7e51e1eae14aadf37407395222bb212e6eb39b0c5e1",
+            input : {
+                max_length: 2048,
+            },
+            apiKey: process.env.REPLICATE_API_KEY,
+            callbackManager: CallbackManager.fromHandlers(handlers),
+        });
+
+        model.verbose = true;
+
+        const resp = String(
+            await model
+                .call(
+                    `
+                    ONLY generate plain sentences without prefix of who is speaking. DO NOT use ${name}: prefix.
+
+                    ${character.instructions}
+
+                    Below are the relevant details about ${name}'s past and the conversation you are in.
+                    ${relevantHistory}
+
+                    ${recentChatHistory}\n${name}:
+                    `
+                )
+                .catch(console.error)
+        );
+
+        const cleaned = resp.replaceAll(",", "");
+        const chunks = cleaned.split("\n");
+        const response = chunks[0];
+
+        await memoryManager.writeToHistory("" + response.trim(), characterKey);
+
+        var Readable = require("stream").Readable;
+
+        let s = new Readable();
+        s.push(response);
+        s.push(null);
+
+        if(response !== undefined && response.length > 1) {
+            memoryManager.writeToHistory("" + response.trim(), characterKey);
+
+            await prismadb.character.update({
+                where: {
+                    id: params.chatId,
+                },
+                data: {
+                    messages: {
+                        create: {
+                            content: response.trim(),
+                            role: "system",
+                            userId: user.id
+                        }
+                    }
+                }
+            })
+        }
     } catch (error) {
         console.log("[CHAT_POST]", error);
         return new NextResponse("Internal Error", { status: 500 });
